@@ -1,0 +1,60 @@
+dword [8h] 90을  저장
+dword [ch] 492을 저장
+edx 에 492 저장
+eax 에 90 저장
+dword[eax]에 492 더함
+eax 에 90 저장
+dword[90]에  492 더함
+eax 와 90 곱함
+dword [ch]에 90을 저장
+eax에 dword[4h]
+eax 와 dword[ch]를 비교 
+
+		1342202917
+134514028
+
+dword[주소값] + 492 
+90 * 
+
+                                                              dword ptr [ebp - 8], 0x5a
+   0x8048432 <main+78>     mov    dword ptr [ebp - 0xc], 0x1ec
+   0x8048439 <main+85>     mov    edx, dword ptr [ebp - 0xc]
+   0x804843c <main+88>     lea    eax, [ebp - 8]
+ ? 0x804843f <main+91>     add    dword ptr [eax], edx
+   0x8048441 <main+93>     mov    eax, dword ptr [ebp - 8]
+   0x8048444 <main+96>     imul   eax, dword ptr [ebp - 8]
+   0x8048448 <main+100>    mov    dword ptr [ebp - 0xc], eax
+   0x804844b <main+103>    mov    eax, dword ptr [ebp - 4]
+   0x804844e <main+106>    cmp    eax, dword ptr [ebp - 0xc]
+
+  90 + 492 = 582 
+ 582 * 90 = 52380
+
+  0x804858a <main+74>    lea    eax, [ebp - 0x78]
+   0x804858d <main+77>    mov    dword ptr [esp], eax
+   0x8048590 <main+80>    call   check <0x80484c8>
+
+178a6 96422
+sub 0x28 40
+ 0x1d7d6c 1932652
+ add x180b7 /98487
+sub  0x2c  44
+
+jae 207 97 304
+ 0x80482f7
+0x1057f6d0
+0x8049fb8 (_DYNAMIC+152) ?? 0x6ffffff0106 97 101
+
++ 0x1c 28
+scanf+ 37
+
+check + 31 과 비교 
+0x 20
+
+
+apk 앱 다운 후 
+unzip
+apktool d (unzip한 파일) 
+
+
+

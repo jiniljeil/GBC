@@ -1,0 +1,8 @@
+gdb 에서
+p & wire_yellow
+p & wire_green
+p & wire_blue
+p & wire_red
+
+radare2 에서 주소로 이동해서 px를 쳐서
+수정 

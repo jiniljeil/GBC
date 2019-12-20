@@ -1,0 +1,56 @@
+과제는 오후 6시까지 커밋하고 푸시 
+
+https://ghostogether.club
+
+
+git remote add origin URL 주소 
+git init 
+vi REAMDE.md
+
+git status == git 상태 
+git add REAMDE.md  ==  git 에 추가 
+git commit -m "first file"
+git log 
+git remote add origin URL 주소 
+git push -u 이름 master
+
+LF 오류 해결 : git config --global core.autocrlf true
+
+# 가장 큰 헤더
+
+## 두번째로 큰 헤더
+
+### 세번~~
+
+####
+
+#####
+
+######
+
+# 안쓰면 그냥 본문
+
+- 불릿 문장
+
+  - 자식 문장 : 두번 스페이스
+
+    -손자 문장 : 4번 스페이스 
+
+1. 숫자가 붙은 문장
+
+2. 숫자가 붙은 문장
+
+--- : 나누는 기호 
+
+해시 함수 : 가변적인 정보를 입력하면 일정한 길이의 데이터를 출력해주는 함수
+git 의 해시 함수  : sha1
+
+해시 충돌 : 두 개의 다른 값을 넣었으나 같은 결과가 나오게 될 때 발생 
+
+스테가노그래피 
+
+정보보안은 컴퓨터 보안의 부분 집합
+
+이미지 첨부
+![이미지이름](./이미지가 있는 폴더/이미지이름.형식)
+

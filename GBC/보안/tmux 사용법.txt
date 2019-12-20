@@ -1,0 +1,19 @@
+tmux ( 여러개 패널 활용 )
+
+Ctrl + c  
+	original      나
+Meta Key  Ctrl + b    Ctrl + a
+세로	M + b       M + \    = ctrl + a 누른 후 \
+가로 	M + %      M + -    = ctrl + a 누른 후  -
+다음	M
+왼쪽		Alt + h
+오른쪽		Alt + l
+아래		Alt + k
+위로		Alt + j
+
+패널 생성   M + c	Alt + c 
+왼패		Alt + n
+오패		Alt + p
+크기 변화 		Alt + 방향키 
+
+숫자 이동 		ctrl + a 후 q  후 숫자 

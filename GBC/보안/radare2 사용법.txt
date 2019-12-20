@@ -1,0 +1,14 @@
+rabin2 -l 파일 이름
+r2 파일 이름
+aa
+aaa
+pdf @ main 
+
+r2 -A 파일 이름
+afl : 함수 리스트 보는 명령어 
+s main 
+VV  : 그래프 보기 
+s main 후에 pdd  : 코드 보기  
+설치 
+- r2pm init
+- r2pm install r2dec 

@@ -1,0 +1,100 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <pthread.h>
+
+#define BUF_SIZE 100
+#define MAX_CLNT 256
+
+void * handle_clnt(void * arg); // 위 함수에 넘길 인자 : arg
+void send_msg(char * msg, int len); 
+void error_handling(char * msg);
+
+int clnt_cnt=0; // 서버에 접속한 클라이언트의 소켓 관리를 위한 변수
+int clnt_socks[MAX_CLNT]; // 서버에 접속한 클라이언트의 소켓 관리를 위한 배열
+pthread_mutex_t mutx; //쓰레드 동기화 
+
+int main(int argc, char *argv[]) 
+{
+	int serv_sock, clnt_sock; //서버, 클라이언트 소켓 생성 
+	struct sockaddr_in serv_adr, clnt_adr; // 서버, 클라이언트 소켓 정보를 저장할 구조체 
+	int clnt_adr_sz; // 클라이언트 소켓 정보를 저장할 구조체의 길이를 저장할 변수 
+	pthread_t t_id; // 쓰레드 아이디 생성
+	if(argc!=2) { // 실행시 필요한 포트번호를 입력하지 않았을 경우 실행하는 오류 문구 
+		printf("Usage : %s <port>\n", argv[0]);
+		exit(1);
+	}
+  
+	pthread_mutex_init(&mutx, NULL); //쓰레드 동기화 
+	serv_sock=socket(PF_INET, SOCK_STREAM, 0);// 서버 소켓 생성(IPv4 , TCP/IP 방식)
+
+	memset(&serv_adr, 0, sizeof(serv_adr)); // 서버 소켓의 정보를 담을 구조체를 0으로 초기화
+	serv_adr.sin_family=AF_INET;  // IPv4 를 사용
+	serv_adr.sin_addr.s_addr=htonl(INADDR_ANY);//모든 아이피의 접근을 허용. 16진수로 변경해서 저장
+	serv_adr.sin_port=htons(atoi(argv[1])); //프로그램 실행시 입력된 포트번호를 10진수로 변경해서 저장
+                                             // 소켓의 주소 할당을 위해 구조체 변수를 초기화함.
+                        //(밑)소켓에 대한 정보를 담은 구조체 // 구조체 크기
+	if(bind(serv_sock, (struct sockaddr*) &serv_adr, sizeof(serv_adr))==-1)// 구조체의 정보를 이용해서 서버 소켓에 bind
+		error_handling("bind() error");
+	if(listen(serv_sock, 5)==-1) // 연결요청 대기 상태 함수 호출 인자 5라는 숫자는 대기 클라이언트의 숫자가 최대 5개라는 의미
+		error_handling("listen() error");
+	
+	while(1)
+	{
+		clnt_adr_sz=sizeof(clnt_adr);//클라이언트 구조체의 크기를 구한다.
+		clnt_sock=accept(serv_sock, (struct sockaddr*)&clnt_adr,&clnt_adr_sz);//클라이언트의 소켓으로부터 데이터를 받아들인다.
+		
+		pthread_mutex_lock(&mutx);  //임계영역 보호 시작
+		clnt_socks[clnt_cnt++]=clnt_sock; // 새로운 연결이 형성될 때마다 변수 clnt_cnt와 배열 clnt_socks에 해당 정보를 등록함.
+		pthread_mutex_unlock(&mutx); // 임계영역 보호 끝
+	
+		pthread_create(&t_id, NULL, handle_clnt, (void*)&clnt_sock); // 추가된 클라이언트에게 서비스를 제공하기 위한 쓰레드를 생성, 이 쓰레드에 의해 void * handle_clnt(void *arg) 함수 실행
+		pthread_detach(t_id); // 종료된 쓰레드가 메모리에서 완전히 소멸되도록 함.
+		printf("Connected client IP: %s \n", inet_ntoa(clnt_adr.sin_addr)); // 연결된 접속자의 IP를 나타내주는 것
+	}
+	close(serv_sock); //서버 소켓 닫는다.
+	return 0;
+}
+	
+void * handle_clnt(void * arg) // 클라이언트 관리 함수
+{
+	int clnt_sock=*((int*)arg); // 클라이언트 소켓 변수
+	int str_len=0, i; // 읽은 메세지 크기 변수
+	char msg[BUF_SIZE]; // 문자열 
+	
+	while((str_len=read(clnt_sock, msg, sizeof(msg)))!=0) // 메세지 읽기
+		send_msg(msg, str_len);  // 메세지 전송
+                                
+	pthread_mutex_lock(&mutx); // 임계영역 보호 시작/ 다른 쓰레드가 이미 임계영역을 실행하고 있는 상황이라면 unlock 함수를 호출하면서 임계 영역을 빠져나갈 때 까지 반환 x
+	for(i=0; i<clnt_cnt; i++)   // 연결되지 않은 클라이언트 제거
+	{
+		if(clnt_sock==clnt_socks[i])
+		{
+			while(i++<clnt_cnt-1)
+				clnt_socks[i]=clnt_socks[i+1];
+			break;
+		}
+	}
+	clnt_cnt--;
+	pthread_mutex_unlock(&mutx); // 임계 영역 보호 끝 
+	close(clnt_sock); //클라이언트 소켓 종료
+	return NULL;
+}
+void send_msg(char * msg, int len)   // 연결된 모든 클라이언트에게 메세지를 전송하는 기능을 제공
+{
+	int i;
+	pthread_mutex_lock(&mutx); //임계 영역 보호 시작
+	for(i=0; i<clnt_cnt; i++)
+		write(clnt_socks[i], msg, len);  // 모든 클라이언트 접속자들에게 메세지 출력
+	pthread_mutex_unlock(&mutx);// 임계 영역 보호 끝
+}
+void error_handling(char * msg) // 에러 메세지 전달
+{
+	fputs(msg, stderr); //fputs 메세지를 파일에 쓰는 것 /에러 메세지 전달
+	fputc('\n', stderr); // 메세지 쓰기
+	exit(1);
+}

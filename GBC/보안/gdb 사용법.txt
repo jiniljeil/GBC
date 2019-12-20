@@ -1,0 +1,81 @@
+스택Stack 에는 함수의 인자, 함수의 리턴 주소값, 지역 변수가 로드된다. 
+힙Heap 에는 동적 할당 메모리(malloc, new 등) 가 저장된다. 
+BSS 영역과 Data 영역에는 전역변수, static 변수 등이 저장되는데 초기화되지 않았거나 0 으로 초기화된 변수들은 BSS 영역에 저장되고 초기화된 변수들은 Data 영역에 저장된다.
+ Text 영역에는 실행될 어셈블리어들이 저장된다.
+
+메모리 구조 
+
+가상 메모리 값은 같으나 물리 메모리 값이 다름 
+
+스택에서 주소 값이 가장 높은 곳이 밑바닥 
+rsp = top of ~ 에 -8 - 스택 push
+rsp +8 스택 pop 
+
+rsp : 스택의 최상위 0x7fff0000
+rbp : 스택의 최하위 0x7fff0010
+
+7th
+ret address
+0x7fff0010
+
+mov rbp ,rsp --> -->
+rsp 가 내려옴
+함수가 끝나면 스택 정리해야함 leave 로 해결
+pop 하면 add 함수의 스택는 그대로 main 함수 스택만 rbp가 복원
+rsp 는 계속 0x7fff0010 가리킴.
+
+
+call : 
+1. 점프
+2. 스택에 다음 주소 값을 푸시 
+
+ltrace ./a.out
+objdump -D 파일명 :  디스어셈블리 코드 출력 
+disas main 
+b main 
+xxd ./ 파
+
+
+gdb 파일명  ex) gdb hello
+info files
+시작점 주소 보기 
+break *(0x4000b0)
+i b
+run
+delete
+다음 어셈블리어로 전환 : nexti = ni
+
+run 실행 방법 
+
+컴파일 후 
+gdb 파일 명
+b main 
+run 
+b : 브레이크 
+
+chmod +x bomb
+**shall echo $((16진수))  : 10진수로 변환  
+si = stepi = add 함수 스택 파고든다.
+si 숫자 = 숫자만큼씩 뛴다.
+continue 
+레지스터 초기화 : set $ax = 0x0 
+**데이터 보기 : x/x $esp 데이터 담고 있는 곳 : 안에 데이터 값이 나옴          ex ) x/10x oxffffd713 
+**                     p $edp - 주소  : 주소 값 확인    ex)p $edp - 0xc  
+pdisas main = main 만 출력 
+
+g00dJ0B! : a 답 
+w0wgreat : b 답  
+5274 : 0x149a의 10진수  : 1번 답
+
+29477: 4번 답
+
+196 : 5번답 
+
+0x8000
+0x64
+0x31
+0xfbad8000 
+0x20
+ 0xfbad8001
+
+

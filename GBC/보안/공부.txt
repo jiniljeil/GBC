@@ -1,0 +1,43 @@
+해킹 공부 사이트
+https://www.hacking-tutorial.com
+
+2.) 매우 추천드리는 워게임 사이트
+(워게임 : 해킹문제풀이 사이트)
+1. http://webhacking.kr
+2. http://wargame.kr 
+3. http://pwnable.kr (시스템해킹)
+4. http://los.rubiya.kr/ (웹해킹)
+5. http://www.hackerschool.org/Sub_Html/... 
+(시스템해킹 기초)
+6. http://suninatas.com/
+7. https://365.csaw.io/challenges
+
+3.) 코드업 (코딩 및 알고리즘 문제풀이 사이트)
+- http://codeup.kr
+
+Malware 종류
+
+Logic Bomb
+
+Fork Bomb
+
+Key Logger
+
+Rootkit
+
+Bootkit
+
+RansomWare
+
+Trojans
+
+Screen scrappers
+
+Backdoor
+
+Spyware
+
+취약점 알아보는 곳 
+CVE 
+CWE
+OWASP

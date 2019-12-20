@@ -1,0 +1,51 @@
+global    _start	//linker (ld)에 대해 선언
+section   .text 
+_start:		 //linker 진입점 알리기
+    mov       rax, 1        // 1번 sys_write (쓰기) 
+    mov       rdi, 1        //  커널에게 stdout을 사용하도록 명령 
+    mov       rsi, message  // 메세지 주소 저장역할
+    mov       rdx, 13     // 출력 문자 (message) 바이트 수
+    syscall 		//  쓰기 수행을 위해 운영체제 호출
+    mov       rax, 60     // 60번 sys exit (종료) 
+    xor        rdi, rdi     //  xor 연산을 통해 0을 반환
+    syscall		// 종료를 수행하기 위해 운영체제 호출
+    section   .data
+message:
+    db        "Hello, World", 10  // db 데이터 유형을 통해 Hello, World를 출력 후 줄 바꿈
+
+
+
+
+BITS 64
+
+section .text
+global _start	//linker (ld)에 대해 선언
+
+strlen:		// 문자열 길이 구하는 함수
+    mov rax,0              // 0번 sys_read
+.looplabel:	// 반복문(Loop)
+    cmp byte [rdi],0    // rdi의 주소값에 있는 값을 byte 만큼했을 때 나오는 값과 0과 비교       
+    je  .end                   // <op1> == <op2> 이면 end로 프로그램의 흐름을 변경
+    inc rdi                    // rdi를 증가 
+    inc rax                   // rax를 증가 
+    jmp .looplabel       // 조건없이 looplabel 로 점프해서 프로그램의 흐름을 바꿈.   
+.end:		// 마침
+    ret                      	//복귀 지점으로 돌아감.
+    			
+_start:		//linker 진입점 알리기
+    mov   rdi, msg       // rdi 레지스터에 메세지 저장
+    call  strlen	// 문자열의 길이를 계산하기 위해 함수 호출
+    add   al, '0'            // al 에 30H('0')를 더한다   = 아스키코드 0 =48을 더함 
+    mov  [len],al          //  [len]에 al 값을 저장
+    mov   rax, 1           //1번 sys_write
+    mov   rdi, 1           // file handle 1 은 stdout 	
+    mov   rsi, len        // len 주소를 저장
+    mov   rdx, 2          //바이트 수
+    syscall                   //쓰기를 수행하기 위해 운영체제 호출
+    mov   rax, 60        // 60번 sys_exit
+    mov   rdi, 0           // stdin
+    syscall                   //종료를 수행하기 위해 운영체제 호출
+
+section .data
+    msg db "hello",0xA,0    // 문자열 출력 
+    len db 0,0xA         	       // 문자열 길이 출력 
